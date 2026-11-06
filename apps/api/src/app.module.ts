@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { HealthModule } from './health/health.module';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HealthModule } from './health/health.module';
     ProjectsModule,
     TasksModule,
     HealthModule,
+    ApplicationsModule,
   ],
   providers: [
     {

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Box,
   Building2,
   CreditCard,
   FolderKanban,
@@ -17,6 +18,7 @@ import { NotificationBell } from '@/components/notification-bell';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Building2 },
+  { href: '/applications', label: 'Applications', icon: Box },
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/members', label: 'Members', icon: Users },
   { href: '/billing', label: 'Billing', icon: CreditCard },

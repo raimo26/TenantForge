@@ -28,6 +28,37 @@ enum TaskStatus {
   DONE
 }
 
+enum ApplicationDesiredState {
+  RUNNING
+  STOPPED
+}
+
+enum ApplicationRuntimeStatus {
+  CREATED
+  DEPLOYING
+  RUNNING
+  FAILED
+  STOPPED
+  DELETING
+}
+
+enum OperationType {
+  DEPLOY
+}
+
+enum OperationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum LogStream {
+  PLATFORM
+  STDOUT
+  STDERR
+}
+
 model User {
   id           String         @id @default(cuid())
   email        String         @unique
@@ -69,6 +100,7 @@ model Organization {
   auditLogs        AuditLog[]
   notifications    Notification[]
   projects         Project[]
+  applications     Application[]
 
   @@index([slug])
 }
@@ -189,4 +221,57 @@ model Comment {
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([taskId, createdAt])
+}
+
+model Application {
+  id             String                   @id @default(cuid())
+  organizationId String
+  name           String
+  image          String
+  containerPort  Int
+  cpuMillicores  Int                      @default(100)
+  memoryMb       Int                      @default(128)
+  desiredState   ApplicationDesiredState  @default(STOPPED)
+  runtimeStatus  ApplicationRuntimeStatus @default(CREATED)
+  statusMessage  String?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  operations     Operation[]
+  logs           ApplicationLog[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, createdAt])
+}
+
+model Operation {
+  id             String          @id @default(cuid())
+  organizationId String
+  applicationId  String
+  actorId        String?
+  type           OperationType
+  status         OperationStatus @default(PENDING)
+  error          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  application    Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  logs           ApplicationLog[]
+
+  @@index([organizationId, createdAt])
+  @@index([applicationId, createdAt])
+}
+
+model ApplicationLog {
+  id            String      @id @default(cuid())
+  applicationId String
+  operationId   String?
+  stream        LogStream
+  message       String
+  createdAt     DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  operation     Operation?  @relation(fields: [operationId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, createdAt])
 }

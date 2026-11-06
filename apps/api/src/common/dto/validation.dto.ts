@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import {
   checkoutSessionSchema,
+  createApplicationSchema,
   createCommentSchema,
   createOrganizationSchema,
   createProjectSchema,
@@ -28,5 +29,6 @@ export class UpdateProjectDto extends createZodDto(updateProjectSchema) {}
 export class CreateTaskDto extends createZodDto(createTaskSchema) {}
 export class UpdateTaskDto extends createZodDto(updateTaskSchema) {}
 export class CreateCommentDto extends createZodDto(createCommentSchema) {}
+export class CreateApplicationDto extends createZodDto(createApplicationSchema) {}
 export class PaginationDto extends createZodDto(paginationSchema) {}
 export class CheckoutSessionDto extends createZodDto(checkoutSessionSchema) {}

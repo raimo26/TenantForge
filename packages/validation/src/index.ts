@@ -109,6 +109,99 @@ export const paginationSchema = z
   })
   .strict();
 
+const IMAGE_TAG = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/;
+const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/;
+const IMAGE_NAME = /^[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*$/;
+const REGISTRY_HOST = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/;
+
+function isRegistryHost(value: string): boolean {
+  const parts = value.split(':');
+  if (parts.length > 2) {
+    return false;
+  }
+  const host = parts[0] ?? '';
+  const port = parts[1];
+  if (!REGISTRY_HOST.test(host)) {
+    return false;
+  }
+  if (port === undefined) {
+    return true;
+  }
+  if (!/^[0-9]{1,5}$/.test(port)) {
+    return false;
+  }
+  const portNumber = Number(port);
+  return portNumber >= 1 && portNumber <= 65535;
+}
+
+/** Public OCI reference with an explicit tag or sha256 digest. No embedded credentials. */
+export function isPublicImageReference(input: string): boolean {
+  if (input.length < 1 || input.length > 512) {
+    return false;
+  }
+  if (/\s/.test(input) || input.includes('://') || input.includes('\\')) {
+    return false;
+  }
+
+  let name = input;
+  let hasReference = false;
+  const at = input.lastIndexOf('@');
+  if (at !== -1) {
+    if (!IMAGE_DIGEST.test(input.slice(at + 1))) {
+      return false;
+    }
+    name = input.slice(0, at);
+    hasReference = true;
+  } else {
+    const slash = name.lastIndexOf('/');
+    const colon = name.lastIndexOf(':');
+    if (colon > slash) {
+      if (!IMAGE_TAG.test(name.slice(colon + 1))) {
+        return false;
+      }
+      name = name.slice(0, colon);
+      hasReference = true;
+    }
+  }
+
+  if (!hasReference || name.length === 0 || name.startsWith('/') || name.endsWith('/')) {
+    return false;
+  }
+
+  const parts = name.split('/');
+  if (parts.some((part) => part.length === 0)) {
+    return false;
+  }
+
+  const first = parts[0] ?? '';
+  let repository = parts;
+  if (first.includes('.') || first.includes(':') || first === 'localhost') {
+    if (!isRegistryHost(first) || parts.length < 2) {
+      return false;
+    }
+    repository = parts.slice(1);
+  }
+
+  return repository.every((part) => IMAGE_NAME.test(part));
+}
+
+export const applicationNameSchema = z
+  .string()
+  .regex(
+    /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/,
+    'Name must be a lowercase DNS label of 1–40 characters',
+  );
+
+export const createApplicationSchema = z
+  .object({
+    name: applicationNameSchema,
+    image: z.string().refine(isPublicImageReference, {
+      message: 'Image must be a public reference with an explicit tag or sha256 digest',
+    }),
+    containerPort: z.number().int().min(1).max(65535),
+  })
+  .strict();
+
 export const checkoutSessionSchema = z
   .object({
     priceId: z.string().min(1),
@@ -129,3 +222,4 @@ export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type CheckoutSessionInput = z.infer<typeof checkoutSessionSchema>;
+export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;

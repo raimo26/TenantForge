@@ -34,6 +34,8 @@ async function bootstrap(): Promise<void> {
     .addTag('notifications')
     .addTag('projects')
     .addTag('tasks')
+    .addTag('applications')
+    .addTag('operations')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

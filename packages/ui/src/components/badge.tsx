@@ -43,6 +43,14 @@ const statusMap: Record<string, BadgeVariant> = {
   ADMIN: 'warning',
   MEMBER: 'success',
   VIEWER: 'neutral',
+  CREATED: 'neutral',
+  DEPLOYING: 'default',
+  RUNNING: 'success',
+  FAILED: 'danger',
+  STOPPED: 'neutral',
+  DELETING: 'warning',
+  PENDING: 'warning',
+  COMPLETED: 'success',
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
